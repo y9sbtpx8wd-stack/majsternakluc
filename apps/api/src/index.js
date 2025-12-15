@@ -7,10 +7,14 @@ const { z } = require('zod');
 
 const prisma = new PrismaClient();
 const app = express();
-app.use(bodyParser.json());
 
-// 🔑 tu pridaj statické súbory
+// Middleware
+app.use(bodyParser.json());
 app.use(express.static('public'));
+
+// Import route
+const userRoute = require('./routes/user');
+app.use('/api/user', userRoute);
 
 // 🔒 Login route
 const loginSchema = z.object({
@@ -146,7 +150,7 @@ app.post('/api/users', async (req, res) => {
 
 // Detail používateľa
 app.get('/api/users/:id', async (req, res) => {
-  const id = req.params.id;
+  const id = Number(req.params.id);
   const user = await prisma.user.findUnique({
     where: { id },
     include: { ads: true, reviews: true }
@@ -155,16 +159,10 @@ app.get('/api/users/:id', async (req, res) => {
   res.json(user);
 });
 
-// Spustenie servera
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`API beží na port ${PORT}`);
-});
-// GET /api/filter
+// Filter route
 app.get('/api/filter', async (req, res) => {
   const { role, city } = req.query;
 
-  // 1. Skús nájsť používateľov podľa filtra
   const users = await prisma.user.findMany({
     where: {
       ...(role ? { role } : {}),
@@ -173,17 +171,19 @@ app.get('/api/filter', async (req, res) => {
   });
 
   if (users.length > 0) {
-    // 2. Ak sú výsledky, vráť používateľov
     return res.json({ type: 'users', data: users });
   }
 
-  // 3. Ak nie sú výsledky, vráť naposledy pridané inzeráty
-  const inzeraty = await prisma.inzerat.findMany({
+  const ads = await prisma.ad.findMany({
     orderBy: { createdAt: 'desc' },
     take: 10
   });
 
-  return res.json({ type: 'inzeraty', data: inzeraty });
+  return res.json({ type: 'inzeraty', data: ads });
 });
 
-
+// Spustenie servera
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`API beží na porte ${PORT}`);
+});
