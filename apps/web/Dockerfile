@@ -8,7 +8,7 @@ RUN corepack prepare yarn@stable --activate
 # Skopíruj Yarn config
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn .yarn
-COPY .pnp.cjs ./
+
 
 # Nainštaluj závislosti
 RUN yarn install --frozen-lockfile
