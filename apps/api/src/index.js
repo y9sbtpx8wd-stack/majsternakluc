@@ -186,28 +186,4 @@ app.get('/api/filter', async (req, res) => {
   return res.json({ type: 'inzeraty', data: inzeraty });
 });
 
-// GET /api/filter
-app.get('/api/filter', async (req, res) => {
-  const { role, city } = req.query;
 
-  // 1. Skús nájsť používateľov podľa filtra
-  const users = await prisma.user.findMany({
-    where: {
-      ...(role ? { role } : {}),
-      ...(city ? { city } : {})
-    }
-  });
-
-  if (users.length > 0) {
-    // 2. Ak sú výsledky, vráť používateľov
-    return res.json({ type: 'users', data: users });
-  }
-
-  // 3. Ak nie sú výsledky, vráť naposledy pridané inzeráty
-  const inzeraty = await prisma.inzerat.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: 10
-  });
-
-  return res.json({ type: 'inzeraty', data: inzeraty });
-});
