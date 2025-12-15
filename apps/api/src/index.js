@@ -184,6 +184,8 @@ app.get('/api/filter', async (req, res) => {
 
 // Spustenie servera
 const PORT = process.env.PORT || 4000;
+
 app.listen(PORT, () => {
   console.log(`API beží na porte ${PORT}`);
 });
+
