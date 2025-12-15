@@ -19,7 +19,7 @@ services:
     build: ./apps/web
     container_name: majsternakluc-web-1
     ports:
-      - "3001:80"
+      - "3001:3000"   # Next.js beží na 3000, vonku bude 3001
     depends_on:
       - api
 
@@ -31,7 +31,7 @@ services:
     depends_on:
       - db
     ports:
-      - "3000:3000"
+      - "4000:3000"   # Express beží na 3000, vonku bude 4000
 
   caddy:
     image: caddy:latest
@@ -44,4 +44,5 @@ services:
     depends_on:
       - web
       - api
+
 
