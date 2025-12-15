@@ -3,15 +3,24 @@ WORKDIR /app
 
 # Aktivuj Corepack
 RUN corepack enable
-
-# Nastav Yarn stable (to je Yarn 4.x)
 RUN corepack prepare yarn@stable --activate
 
-COPY package.json yarn.lock ./
+# Skopíruj Yarn config
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn .yarn
+COPY .pnp.cjs ./
+
+# Nainštaluj závislosti
 RUN yarn install --frozen-lockfile
 
+# Skopíruj zdrojáky
 COPY . .
+
+# Build
 RUN yarn build
 
+# Production image
 FROM nginx:alpine as production
-COPY --from=builder /app/out /usr/share/nginx/html
+WORKDIR /usr/share/nginx/html
+COPY --from=builder /app/out .   # alebo /app/build podľa frameworku
+
