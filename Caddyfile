@@ -1,0 +1,7 @@
+majsternakluc.sk, www.majsternakluc.sk {
+    reverse_proxy web:80
+}
+
+api.majsternakluc.sk {
+    reverse_proxy api:80
+}

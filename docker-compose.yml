@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:15
+    container_name: majsternakluc-db-1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    container_name: majsternakluc-redis-1
+    ports:
+      - "6379:6379"
+
+  web:
+    build: ./apps/web
+    container_name: majsternakluc-web-1
+    ports:
+      - "3001:80"
+    depends_on:
+      - api
+
+  api:
+    build: ./apps/api
+    container_name: majsternakluc-api-1
+    environment:
+      DATABASE_URL: "postgresql://postgres:password@db:5432/postgres?schema=public"
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+
+  caddy:
+    image: caddy:latest
+    container_name: majsternakluc-caddy-1
+    ports:
+      - "8080:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - web
+      - api
+
