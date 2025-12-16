@@ -11,6 +11,9 @@ COPY src ./src
 COPY next.config.js ./
 RUN yarn build
 
+COPY .yarn .yarn
+COPY .yarnrc.yml ./
+
 FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production

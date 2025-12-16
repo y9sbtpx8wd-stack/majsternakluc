@@ -9,6 +9,9 @@ COPY tsconfig.json ./
 COPY src ./src
 RUN yarn build
 
+COPY .yarn .yarn
+COPY .yarnrc.yml ./
+
 FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production
