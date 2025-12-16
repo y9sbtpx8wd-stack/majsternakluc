@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import AdsGrid from "./components/AdsGrid";
+import { AdsGrid } from './components/AdsGrid';
 import AdModal from "./components/AdModal";
 
 
