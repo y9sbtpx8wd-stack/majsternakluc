@@ -11,7 +11,7 @@ COPY .yarn .yarn
 
 
 # Nainštaluj závislosti
-RUN yarn install --immutable
+RUN yarn install --immutable --inline-builds
 
 # Skopíruj zdrojáky
 COPY . .
