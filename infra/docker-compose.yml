@@ -27,7 +27,7 @@ services:
   api:
     build:
       context: ../apps/api
-      dockerfile: infra/api/Dockerfile
+      dockerfile: apps/api/Dockerfile
     container_name: mk_api
     env_file:
       - ./env/api.env
@@ -42,7 +42,7 @@ services:
   web:
     build:
       context: ../apps/web
-      dockerfile: infra/api/Dockerfile
+      dockerfile: apps/api/Dockerfile
     container_name: mk_web
     env_file:
       - ./env/web.env
