@@ -1,4 +1,9 @@
 {
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
   "dependencies": {
     "@prisma/client": "^5.15.0",
     "bcryptjs": "^3.0.3"
@@ -7,3 +12,4 @@
     "prisma": "^5.15.0"
   }
 }
+
