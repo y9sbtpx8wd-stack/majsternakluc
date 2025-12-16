@@ -1,8 +1,10 @@
-FROM node:22 AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
 RUN corepack enable && corepack prepare yarn@stable --activate
 
 COPY package.json yarn.lock ./
+COPY .yarn .yarn
+COPY .yarnrc.yml ./
 RUN yarn install --immutable-cache --inline-builds
 
 COPY tsconfig.json ./
@@ -10,9 +12,6 @@ COPY public ./public
 COPY src ./src
 COPY next.config.js ./
 RUN yarn build
-
-COPY .yarn .yarn
-COPY .yarnrc.yml ./
 
 FROM node:22-slim
 WORKDIR /app
