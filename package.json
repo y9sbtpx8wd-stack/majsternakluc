@@ -1,14 +1,16 @@
 {
+  "name": "majsternakluc",
   "private": true,
   "workspaces": [
     "apps/web",
     "apps/api"
   ],
-  "dependencies": {
-    "@prisma/client": "^5.15.0",
-    "bcryptjs": "^3.0.3"
-  },
-  "devDependencies": {
-    "prisma": "^5.15.0"
+  "scripts": {
+    "dev:web": "yarn --cwd apps/web dev",
+    "dev:api": "yarn --cwd apps/api start:dev",
+    "build:web": "yarn --cwd apps/web build",
+    "build:api": "yarn --cwd apps/api build",
+    "start:web": "yarn --cwd apps/web start",
+    "start:api": "yarn --cwd apps/api start:prod"
   }
 }

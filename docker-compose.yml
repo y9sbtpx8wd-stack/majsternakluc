@@ -1,48 +1,55 @@
+version: "3.9"
+
 services:
   db:
-    image: postgres:15
-    container_name: majsternakluc-db-1
+    image: postgres:16-alpine
+    container_name: mk_db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: postgres
+      POSTGRES_USER: mk
+      POSTGRES_PASSWORD: mkpass
+      POSTGRES_DB: mkdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mk -d mkdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   redis:
-    image: redis:7
-    container_name: majsternakluc-redis-1
+    image: redis:7-alpine
+    container_name: mk_redis
     ports:
       - "6379:6379"
 
-  web:
-    build: ./apps/web
-    container_name: majsternakluc-web-1
-    ports:
-      - "3001:3000"   # Next.js beží na 3000, vonku bude 3001
-    depends_on:
-      - api
-
   api:
-    build: ./apps/api
-    container_name: majsternakluc-api-1
-    environment:
-      DATABASE_URL: "postgresql://postgres:password@db:5432/postgres?schema=public"
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+    container_name: mk_api
+    env_file:
+      - ./env/api.env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     ports:
-      - "4000:3000"   # Express beží na 3000, vonku bude 4000
+      - "4000:4000"
 
-  caddy:
-    image: caddy:latest
-    container_name: majsternakluc-caddy-1
-    ports:
-      - "8080:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile
+    container_name: mk_web
+    env_file:
+      - ./env/web.env
     depends_on:
-      - web
       - api
+    ports:
+      - "3000:3000"
 
-
+volumes:
+  db_data:
