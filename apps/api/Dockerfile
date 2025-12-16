@@ -3,12 +3,12 @@ WORKDIR /app
 
 RUN corepack enable && corepack prepare yarn@stable --activate
 
-COPY apps/api/package.json apps/api/yarn.lock ./
+COPY package.json yarn.lock ./
 COPY .yarnrc.yml ./
 RUN yarn install
 
-COPY apps/api/tsconfig.json ./
-COPY apps/api/src ./src
+COPY tsconfig.json ./
+COPY src ./src
 RUN yarn build
 
 FROM node:22-slim
