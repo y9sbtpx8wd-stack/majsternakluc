@@ -1,23 +1,23 @@
 services:
   api:
     build:
-      context: ..
-      dockerfile: apps/api/Dockerfile
+      context: ../apps/api
+      dockerfile: Dockerfile
     env_file:
       - env/api.env
     volumes:
-      - ../:/app
+      - ../apps/api:/app
     ports:
       - "3000:3000"
 
   web:
     build:
-      context: ..
-      dockerfile: apps/web/Dockerfile
+      context: ../apps/web
+      dockerfile: Dockerfile
     env_file:
       - env/web.env
     volumes:
-      - ../:/app
+      - ../apps/web:/app
     ports:
       - "3001:3000"
 
@@ -27,12 +27,21 @@ services:
       - env/db.env
     ports:
       - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
 
+  caddy:
+    image: caddy:latest
+    volumes:
+      - ../Caddyfile:/etc/caddy/Caddyfile
+    ports:
+      - "80:80"
+      - "443:443"
 
 volumes:
   db_data:
