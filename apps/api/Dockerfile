@@ -1,20 +1,22 @@
-FROM node:22
+FROM node:22 AS builder
 
-# Nastav pracovný adresár
+WORKDIR /app
+RUN corepack enable && corepack prepare yarn@stable --activate
+
+COPY package.json yarn.lock .yarnrc.yml ./
+RUN yarn install --immutable-cache --inline-builds
+
+COPY tsconfig.json ./
+COPY src ./src
+RUN yarn build
+
+FROM node:22-slim
 WORKDIR /app
 
-# Skopíruj package.json a package-lock.json
-COPY package*.json ./
+ENV NODE_ENV=production
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY package.json ./
 
-# Nainštaluj závislosti
-RUN npm install --production
-
-# Skopíruj zvyšok kódu
-COPY . .
-
-# Prisma migrácie (ak používaš)
-RUN npx prisma generate
-
-# Spusti aplikáciu
-CMD ["npm", "start"]
-
+EXPOSE 4000
+CMD ["node", "dist/main.js"]

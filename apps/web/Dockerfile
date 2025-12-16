@@ -1,26 +1,20 @@
-FROM node:22 as builder
+FROM node:22 AS builder
+
 WORKDIR /app
+RUN corepack enable && corepack prepare yarn@stable --activate
 
-# Aktivuj Corepack
-RUN corepack enable
-RUN corepack prepare yarn@stable --activate
-
-# Skopíruj Yarn config
 COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn .yarn
+RUN yarn install --immutable-cache --inline-builds
 
-
-# Nainštaluj závislosti
-RUN yarn install --immutable --inline-builds
-
-# Skopíruj zdrojáky
 COPY . .
-
-# Build
 RUN yarn build
 
-# Production image
-FROM nginx:alpine as production
-WORKDIR /usr/share/nginx/html
-COPY --from=builder /app/out .   # alebo /app/build podľa frameworku
+FROM node:22-slim
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 
+EXPOSE 3000
+CMD ["yarn", "start"]
