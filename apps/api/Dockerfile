@@ -5,7 +5,7 @@ RUN corepack enable && corepack prepare yarn@stable --activate
 
 COPY apps/api/package.json apps/api/yarn.lock ./
 COPY .yarnrc.yml ./
-RUN yarn install --immutable-cache --inline-builds
+RUN yarn install
 
 COPY apps/api/tsconfig.json ./
 COPY apps/api/src ./src
