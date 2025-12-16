@@ -11,7 +11,7 @@ COPY .yarn .yarn
 
 
 # Nainštaluj závislosti
-RUN yarn install --frozen-lockfile
+RUN yarn install --immutable
 
 # Skopíruj zdrojáky
 COPY . .
