@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16-alpine
@@ -24,32 +22,28 @@ services:
     ports:
       - "6379:6379"
 
+  services:
   api:
     build:
-      context: ../apps/api
-      dockerfile: /api/Dockerfile
-    container_name: mk_api
+      context: ..
+      dockerfile: apps/api/Dockerfile
     env_file:
-      - ./env/api.env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
+      - env/api.env
+    volumes:
+      - ../:/app
     ports:
-      - "4000:4000"
+      - "3000:3000"
 
   web:
     build:
-      context: ../apps/web
-      dockerfile: /api/Dockerfile
-    container_name: mk_web
+      context: ..
+      dockerfile: apps/web/Dockerfile
     env_file:
-      - ./env/web.env
-    depends_on:
-      - api
+      - env/web.env
+    volumes:
+      - ../:/app
     ports:
-      - "3000:3000"
+      - "3001:3000"
 
 volumes:
   db_data:
