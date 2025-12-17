@@ -1,7 +1,6 @@
 FROM node:22-slim AS builder
 WORKDIR /app
 
-# Nainštaluj systémové balíky potrebné pre Prisma, bcrypt, esbuild
 RUN apt-get update -y && apt-get install -y \
     openssl \
     libssl-dev \
@@ -9,7 +8,6 @@ RUN apt-get update -y && apt-get install -y \
     python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Root Yarn súbory (workspace konfigurácia)
 COPY .yarn/releases .yarn/releases
 COPY .yarnrc.yml ./
 COPY yarn.lock ./
@@ -17,26 +15,22 @@ COPY package.json ./
 
 RUN corepack enable && corepack prepare yarn@stable --activate
 
-# Skopíruj všetky workspaces (apps/)
 COPY apps apps
-
-# Nainštaluj závislosti podľa root lockfile
 RUN yarn install --immutable --inline-builds
-
-# Buildni konkrétny workspace (web)
 RUN yarn workspace majsternakluc-web build
 
-# Production stage
 FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Skopíruj buildnutý web
-COPY --from=builder /app/apps/web/.next ./apps/web/.next
+# Root workspace súbory
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/yarn.lock ./yarn.lock
+COPY --from=builder /app/.yarnrc.yml ./.yarnrc.yml
+COPY --from=builder /app/.yarn ./ .yarn
+
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
-COPY --from=builder /app/apps/web/public ./apps/web/public
+COPY --from=builder /app/apps/web ./apps/web
 
 EXPOSE 3000
-CMD ["yarn", "workspace", "majsternakluc-web", "start"]
-
+CMD ["corepack", "yarn", "workspace", "majsternakluc-web", "start"]
