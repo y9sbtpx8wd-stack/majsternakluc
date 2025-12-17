@@ -1,6 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { defineConfig } from '@prisma/client/runtime/library';
 
-export const prisma = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL,
-});
-
+export default {
+  schema: 'apps/api/prisma/schema.prisma',
+  datasource: {
+    db: {
+      url: process.env.DATABASE_URL!,
+    },
+  },
+};
