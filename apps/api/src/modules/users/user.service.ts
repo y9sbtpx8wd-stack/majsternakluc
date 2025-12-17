@@ -10,7 +10,7 @@ export class UserService {
     return this.prisma.user.findMany();
   }
 
-  async findOne(id: number): Promise<User | null> {
-    return this.prisma.user.findUnique({ where: { id } });
-  }
+  async findOne(id: string): Promise<User | null> {
+  return this.prisma.user.findUnique({ where: { id } });
+ }
 }
