@@ -9,7 +9,7 @@ COPY .yarnrc.yml ./
 COPY apps/api/tsconfig.json ./tsconfig.json
 COPY apps/api/src ./src
 
-RUN yarn install --immutable-cache --inline-builds
+RUN yarn install --immutable --inline-builds
 RUN yarn build
 
 FROM node:22-slim

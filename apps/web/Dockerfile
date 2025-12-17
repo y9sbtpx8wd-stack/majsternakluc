@@ -11,7 +11,7 @@ COPY apps/web/next.config.js ./next.config.js
 COPY apps/web/public ./public
 COPY apps/web/src ./src
 
-RUN yarn install --immutable-cache --inline-builds
+RUN yarn install --immutable --inline-builds
 RUN yarn build
 
 FROM node:22-slim
