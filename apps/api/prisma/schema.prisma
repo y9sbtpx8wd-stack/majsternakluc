@@ -18,7 +18,7 @@ enum Category {
 }
 
 model User {
-  id            Int   @id @default(autoincrement())
+  id            String   @id @default(uuid())
   email         String   @unique
   role          String
   passwordHash  String
@@ -70,7 +70,7 @@ model Ad {
   updatedAt   DateTime   @updatedAt
 
   metrics     AdMetrics?
-  reviews     Review[]   // ← doplnený opačný vzťah
+  reviews     Review[]
 }
 
 model AdMetrics {
@@ -83,20 +83,22 @@ model AdMetrics {
 }
 
 model Review {
-  id        String   @id @default(uuid())   // ← zmenené z Int na String UUID
-  rating    Int      // 1–5
+  id        String   @id @default(uuid())
+  rating    Int
   comment   String?
-  adId      String                           // ← zmenené z Int na String
+  adId      String
   ad        Ad       @relation(fields: [adId], references: [id])
   createdAt DateTime @default(now())
 }
+
 model Demand {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   title     String
   createdAt DateTime @default(now())
 }
+
 model Listing {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   title     String
   description String?
   createdAt DateTime @default(now())
