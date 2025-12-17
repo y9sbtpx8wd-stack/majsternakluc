@@ -14,11 +14,6 @@
     "start:api": "yarn --cwd apps/api start:prod"
   },
   "prisma": {
-    "schema": "apps/api/prisma/schema.prisma",
-    "datasources": {
-      "db": {
-        "url": "env:DATABASE_URL"
-      }
-    }
+  "schema": "apps/api/prisma/schema.prisma"
   }
 }

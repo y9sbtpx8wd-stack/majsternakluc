@@ -1,9 +1,6 @@
-import { defineConfig } from '@prisma/config';
+import { PrismaClient } from '@prisma/client';
 
-export default defineConfig({
-  datasource: {
-    db: {
-      url: process.env.DATABASE_URL!, // použije tvoju env premennú
-    },
-  },
+export const prisma = new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL,
 });
+
