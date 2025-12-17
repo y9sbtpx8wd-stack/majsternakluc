@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import { Demand} from '@prisma/client';
+import { Demand } from '@prisma/client';
 
 @Injectable()
 export class DemandsService {
@@ -10,7 +10,8 @@ export class DemandsService {
     return this.prisma.demand.findMany();
   }
 
-  async findOne(id: number): Promise<Demand | null> {
+  async findOne(id: string): Promise<Demand | null> {
     return this.prisma.demand.findUnique({ where: { id } });
   }
 }
+
