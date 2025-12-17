@@ -1,15 +1,16 @@
 FROM node:22-slim AS builder
 WORKDIR /app
-RUN corepack enable && corepack prepare yarn@stable --activate
 
-COPY package.json yarn.lock ./
-COPY .yarn .yarn
+
+COPY .yarn/releases .yarn/releases
 COPY .yarnrc.yml ./
 
+COPY apps/api/package.json ./package.json
+COPY yarn.lock ./yarn.lock
 COPY apps/api/tsconfig.json ./tsconfig.json
 COPY apps/api/src ./src
 
-RUN yarn install --immutable --inline-builds
+RUN corepack enable && yarn install --immutable --inline-builds
 RUN yarn build
 
 FROM node:22-slim

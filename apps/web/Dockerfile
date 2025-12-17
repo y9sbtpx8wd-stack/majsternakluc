@@ -1,10 +1,11 @@
 FROM node:22-slim AS builder
 WORKDIR /app
-RUN corepack enable && corepack prepare yarn@stable --activate
 
-COPY package.json yarn.lock ./
-COPY .yarn .yarn
+COPY .yarn/releases .yarn/releases
 COPY .yarnrc.yml ./
+COPY package.json yarn.lock ./
+
+RUN corepack enable && corepack prepare yarn@stable --activate
 
 COPY apps/web/tsconfig.json ./tsconfig.json
 COPY apps/web/next.config.js ./next.config.js
