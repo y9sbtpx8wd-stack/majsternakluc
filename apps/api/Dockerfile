@@ -9,15 +9,13 @@ COPY package.json ./
 
 RUN corepack enable && corepack prepare yarn@stable --activate
 
-# Skopíruj workspace súbory
-COPY apps/api/package.json apps/api/package.json
-COPY apps/api/tsconfig.json apps/api/tsconfig.json
-COPY apps/api/src apps/api/src
+# Skopíruj celý priečinok apps (všetky workspaces)
+COPY apps apps
 
 # Nainštaluj závislosti podľa root lockfile
 RUN yarn install --immutable --inline-builds
 
-# Buildni workspace
+# Buildni konkrétny workspace
 RUN yarn workspace majsternakluc-api build
 
 FROM node:22-slim

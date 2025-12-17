@@ -9,17 +9,13 @@ COPY package.json ./
 
 RUN corepack enable && corepack prepare yarn@stable --activate
 
-# Skopíruj workspace súbory
-COPY apps/web/package.json apps/web/package.json
-COPY apps/web/tsconfig.json apps/web/tsconfig.json
-COPY apps/web/next.config.js apps/web/next.config.js
-COPY apps/web/public apps/web/public
-COPY apps/web/src apps/web/src
+# Skopíruj všetky workspaces (apps/)
+COPY apps apps
 
 # Nainštaluj závislosti podľa root lockfile
 RUN yarn install --immutable --inline-builds
 
-# Buildni workspace
+# Buildni konkrétny workspace
 RUN yarn workspace majsternakluc-web build
 
 FROM node:22-slim
