@@ -12,6 +12,7 @@ dist
 !.yarn/sdks/**
 !.yarn/patches/**
 !.yarn/versions/**
+!.yarn/cache/**
 
 # Logs
 logs
