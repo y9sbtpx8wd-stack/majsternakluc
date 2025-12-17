@@ -8,8 +8,8 @@ RUN apt-get update -y && apt-get install -y \
     build-essential \
     python3 \
     && rm -rf /var/lib/apt/lists/*
-    
-# Root Yarn súbory
+
+# Root Yarn súbory (workspace konfigurácia)
 COPY .yarn/releases .yarn/releases
 COPY .yarnrc.yml ./
 COPY yarn.lock ./
@@ -23,13 +23,15 @@ COPY apps apps
 # Nainštaluj závislosti podľa root lockfile
 RUN yarn install --immutable --inline-builds
 
-# Buildni konkrétny workspace
+# Buildni konkrétny workspace (web)
 RUN yarn workspace majsternakluc-web build
 
+# Production stage
 FROM node:22-slim
 WORKDIR /app
 ENV NODE_ENV=production
 
+# Skopíruj buildnutý web
 COPY --from=builder /app/apps/web/.next ./apps/web/.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
@@ -37,3 +39,4 @@ COPY --from=builder /app/apps/web/public ./apps/web/public
 
 EXPOSE 3000
 CMD ["yarn", "workspace", "majsternakluc-web", "start"]
+
