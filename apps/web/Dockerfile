@@ -1,6 +1,14 @@
 FROM node:22-slim AS builder
 WORKDIR /app
 
+# Nainštaluj systémové balíky potrebné pre Prisma, bcrypt, esbuild
+RUN apt-get update -y && apt-get install -y \
+    openssl \
+    libssl-dev \
+    build-essential \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+    
 # Root Yarn súbory
 COPY .yarn/releases .yarn/releases
 COPY .yarnrc.yml ./
