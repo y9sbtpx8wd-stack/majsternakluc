@@ -18,7 +18,7 @@ enum Category {
 }
 
 model User {
-  id            String   @id @default(uuid())
+  id            Int   @id @default(uuid())
   email         String   @unique
   role          String
   passwordHash  String
@@ -88,5 +88,16 @@ model Review {
   comment   String?
   adId      String                           // ← zmenené z Int na String
   ad        Ad       @relation(fields: [adId], references: [id])
+  createdAt DateTime @default(now())
+}
+model Demand {
+  id        Int      @id @default(autoincrement())
+  title     String
+  createdAt DateTime @default(now())
+}
+model Listing {
+  id        Int      @id @default(autoincrement())
+  title     String
+  description String?
   createdAt DateTime @default(now())
 }

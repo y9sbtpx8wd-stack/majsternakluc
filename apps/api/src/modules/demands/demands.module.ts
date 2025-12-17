@@ -1,5 +1,9 @@
-// users.module.ts
 import { Module } from '@nestjs/common';
+import { DemandsService } from './demands.service';
+import { DemandsController } from './demands.controller';
 
-@Module({})
-export class UsersModule {}
+@Module({
+  providers: [DemandsService],
+  controllers: [DemandsController],
+})
+export class DemandsModule {}
