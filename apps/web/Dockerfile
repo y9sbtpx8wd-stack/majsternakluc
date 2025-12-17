@@ -5,12 +5,13 @@ RUN corepack enable && corepack prepare yarn@stable --activate
 COPY package.json yarn.lock ./
 COPY .yarn .yarn
 COPY .yarnrc.yml ./
-RUN yarn install --immutable-cache --inline-builds
 
-COPY tsconfig.json ./
-COPY public ./public
-COPY src ./src
-COPY next.config.js ./
+COPY apps/web/tsconfig.json ./tsconfig.json
+COPY apps/web/next.config.js ./next.config.js
+COPY apps/web/public ./public
+COPY apps/web/src ./src
+
+RUN yarn install --immutable-cache --inline-builds
 RUN yarn build
 
 FROM node:22-slim

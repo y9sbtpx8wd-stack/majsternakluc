@@ -5,10 +5,11 @@ RUN corepack enable && corepack prepare yarn@stable --activate
 COPY package.json yarn.lock ./
 COPY .yarn .yarn
 COPY .yarnrc.yml ./
-RUN yarn install --immutable-cache --inline-builds
 
-COPY tsconfig.json ./
-COPY src ./src
+COPY apps/api/tsconfig.json ./tsconfig.json
+COPY apps/api/src ./src
+
+RUN yarn install --immutable-cache --inline-builds
 RUN yarn build
 
 FROM node:22-slim
