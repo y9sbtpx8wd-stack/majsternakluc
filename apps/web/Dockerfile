@@ -1,6 +1,7 @@
 FROM node:22-slim AS builder
 WORKDIR /app
 
+# Root Yarn súbory
 COPY .yarn/releases .yarn/releases
 COPY .yarnrc.yml ./
 COPY yarn.lock ./
@@ -8,13 +9,17 @@ COPY package.json ./
 
 RUN corepack enable && corepack prepare yarn@stable --activate
 
-COPY apps/web/package.json ./apps/web/package.json
-COPY apps/web/tsconfig.json ./apps/web/tsconfig.json
-COPY apps/web/next.config.js ./apps/web/next.config.js
-COPY apps/web/public ./apps/web/public
-COPY apps/web/src ./apps/web/src
+# Skopíruj workspace súbory
+COPY apps/web/package.json apps/web/package.json
+COPY apps/web/tsconfig.json apps/web/tsconfig.json
+COPY apps/web/next.config.js apps/web/next.config.js
+COPY apps/web/public apps/web/public
+COPY apps/web/src apps/web/src
 
+# Nainštaluj závislosti podľa root lockfile
 RUN yarn install --immutable --inline-builds
+
+# Buildni workspace
 RUN yarn workspace majsternakluc-web build
 
 FROM node:22-slim
