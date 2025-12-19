@@ -12,6 +12,7 @@ export class AuthService {
     lastName: string,
     email: string,
     password: string,
+    phone: string,
   ) {
     const exists = await this.prisma.user.findUnique({
       where: { email },
@@ -29,6 +30,8 @@ export class AuthService {
         lastName,
         email,
         passwordHash,
+        phone,
+        role: 'user',
       },
     });
 
@@ -64,4 +67,3 @@ export class AuthService {
     return { user, token };
   }
 }
-
