@@ -1,20 +1,18 @@
-services:
+version: "3.9"
 
-api:
-  build:
-    context: .
-    dockerfile: apps/api/Dockerfile
-    args:
-      DATABASE_URL: ${DATABASE_URL}
-      JWT_SECRET: ${JWT_SECRET}
-  container_name: api
-  environment:
-    DATABASE_URL: ${DATABASE_URL}
-    JWT_SECRET: ${JWT_SECRET}
-  ports:
-    - "4000:4000"
-  depends_on:
-    - 
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: api
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/majsternakluc"
+      JWT_SECRET: "supersecret"
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
 
   web:
     build:
@@ -23,7 +21,6 @@ api:
     container_name: web
     ports:
       - "3001:3000"
-
 
   db:
     image: postgres:16-alpine
@@ -47,6 +44,7 @@ api:
       - "80:80"
       - "443:443"
     restart: unless-stopped
-  
+
 volumes:
   db_data:
+
