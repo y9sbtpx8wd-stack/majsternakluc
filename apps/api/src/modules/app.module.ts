@@ -4,19 +4,17 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ListingsModule } from './listings/listings.module';
 import { DemandsModule } from './demands/demands.module';
+import { ChatModule } from '../chat/chat.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      url: process.env.DATABASE_URL,
-      autoLoadEntities: true,
-      synchronize: true // pre MVP, neskôr vypnúť
-    }),
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     ListingsModule,
-    DemandsModule
-  ]
+    DemandsModule,
+    ChatModule,
+  ],
 })
 export class AppModule {}

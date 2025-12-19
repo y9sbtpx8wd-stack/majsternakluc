@@ -1,17 +1,37 @@
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
-import styles from '../styles.css';
+import AdModal from '../src/pages/components/AdModal';
+import { ChatWidget } from '../src/pages/components/ChatWidget';
+import AdsGrid from '../src/pages/components/AdsGrid';
+
+type PriceItem = {
+  service: string;
+  price: string;
+};
 
 type Listing = {
   id: string;
-  title: string;
-  description: string;
-  pricePerHour?: string;
-  photos?: string[];
+  title: string;                 // názov inzerátu
+  description: string;           // predstavenie / popis
+  intro?: string;                // krátke intro (ak existuje)
+  pricePerHour?: string;         // fallback cena
+  photos?: string[];             // max 3 zobrazíme
+  location?: string;             // lokalita pôsobenia
+  experienceYears?: number;      // prax v rokoch
+  skills?: string[];             // zručnosti
+  email?: string;
+  phone?: string;
+  showEmail?: boolean;
+  showPhone?: boolean;
+  priceList?: PriceItem[];       // detailný cenník
+  extraInfo?: string;            // doplnkové info (referencie, certifikáty)
+  isOnline?: boolean;            // dostupnosť online
 };
 
 export default function LandingPage() {
   const [listings, setListings] = useState<Listing[]>([]);
+  const [selectedAd, setSelectedAd] = useState<Listing | null>(null);
+  const [chatAd, setChatAd] = useState<Listing | null>(null);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/listings`)
@@ -43,35 +63,21 @@ export default function LandingPage() {
       <main className="page-root">
         <h1>Inzeráty remeselníkov</h1>
 
-        <div className="grid">
-          {listings.map(l => (
-            <div className="card" key={l.id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <div><strong>{l.title}</strong></div>
-                <div>lokalita: —</div>
-              </div>
-
-              <p style={{ color: '#555' }}>{l.description}</p>
-
-              <div style={{ display: 'flex', gap: 8 }}>
-                {(l.photos ?? []).slice(0, 3).map((p, i) => (
-                  <div
-                    key={i}
-                    className="round"
-                    style={{ width: 60, height: 60, background: '#f2f2f2' }}
-                  />
-                ))}
-              </div>
-
-              <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-                <button className="button">Zobraziť inzerát</button>
-                <button className="button" style={{ background: '#4CAF50' }}>Začať chat</button>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* TU JE NOVÝ GRID */}
+        <AdsGrid
+          ads={listings}
+          setSelectedAd={setSelectedAd}
+          setChatAd={setChatAd}
+        />
       </main>
+
+      {selectedAd && (
+        <AdModal ad={selectedAd} onClose={() => setSelectedAd(null)} />
+      )}
+
+      {chatAd && (
+        <ChatWidget ad={chatAd} onClose={() => setChatAd(null)} />
+      )}
     </>
   );
 }
-

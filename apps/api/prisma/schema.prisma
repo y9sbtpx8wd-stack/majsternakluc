@@ -104,3 +104,27 @@ model Listing {
   description String?
   createdAt DateTime @default(now())
 }
+model Chat {
+  id           String    @id @default(cuid())
+  listingId    String
+  listingTitle String
+  customerName String?
+  customerEmail String?
+  customerPhone String?
+  isClosed     Boolean   @default(false)
+
+  messages     Message[]
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender    String   // 'customer' | 'craftsman' napr.
+  text      String
+
+  createdAt DateTime @default(now())
+}
