@@ -1,6 +1,11 @@
 FROM node:22-slim AS builder
 WORKDIR /app
 
+ARG DATABASE_URL
+ARG JWT_SECRET
+ENV DATABASE_URL=$DATABASE_URL
+ENV JWT_SECRET=$JWT_SECRET
+
 RUN apt-get update -y && apt-get install -y \
     openssl \
     libssl-dev \
