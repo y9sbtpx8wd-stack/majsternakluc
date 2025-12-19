@@ -26,8 +26,10 @@ ENV NODE_ENV=production
 # Root workspace súbory
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/yarn.lock ./yarn.lock
-COPY --from=builder /app/.yarnrc.yml ./.yarnrc.yml
-COPY --from=builder /app/.yarn ./ .yarn
+COPY --from=builder /app/.yarn/ ./.yarn/
+COPY --from=builder /app/.yarnrc.yml ./
+COPY --from=builder /app/.yarn/releases/ ./.yarn/releases/
+
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/web ./apps/web
