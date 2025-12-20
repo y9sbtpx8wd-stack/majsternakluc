@@ -13,6 +13,6 @@
     "allowJs": true,
     "checkJs": false
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/pages/components/ChatWidget.jsx", "src/pages/components/AdModal.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "components/ChatWidget.jsx", "components/AdModal.jsx"],
   "exclude": ["node_modules"]
 }
