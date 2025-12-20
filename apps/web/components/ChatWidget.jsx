@@ -1,94 +1,80 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { startChat, sendMessage, getMessages } from '../../utils/chatApi';
-import { createChatSocket } from '../../utils/chatSocket';
+'use client';
 
-export function ChatWidget({ ad, onClose }) {
-  const [chatId, setChatId] = useState(null);
-  const [messages, setMessages] = useState([]);
+import { useEffect, useState } from 'react';
+import { Listing } from '@/lib/types';
+
+export default function ChatWidget({
+  ad,
+  onClose,
+}: {
+  ad: Listing | null;
+  onClose: () => void;
+}) {
+  const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState('');
-  const socketRef = useRef(null);
-  const messagesEndRef = useRef(null);
+  const [online, setOnline] = useState(false);
 
-  // Auto-scroll
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (!ad) return;
 
-  // Load messages when chatId exists
-  useEffect(() => {
-    if (!chatId) return;
+    // Načítanie histórie
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/messages/${ad.id}`)
+      .then((res) => res.json())
+      .then(setMessages);
 
-    getMessages(chatId).then((msgs) => setMessages(msgs));
+    // Online status
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/user/online/${ad.id}`)
+      .then((res) => res.json())
+      .then((d) => setOnline(d.online));
+  }, [ad]);
 
-    socketRef.current = createChatSocket(chatId, (msg) => {
-      setMessages((prev) => [...prev, msg]);
-    });
-
-    return () => {
-      socketRef.current?.disconnect();
-    };
-  }, [chatId]);
-
-  async function handleSend() {
+  const sendMessage = async () => {
     if (!input.trim()) return;
 
-    // 1) If chat not started → start it
-    if (!chatId) {
-      const chat = await startChat({
-        listingId: ad.id,
-        listingTitle: ad.title,
-        firstMessage: input,
-      });
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chat/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adId: ad?.id, message: input }),
+    });
 
-      setChatId(chat.id);
-      setMessages([
-        {
-          id: 'temp',
-          sender: 'customer',
-          text: input,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-
-      setInput('');
-      return;
-    }
-
-    // 2) If chat exists → send message
-    const msg = await sendMessage(chatId, 'customer', input);
-    setMessages((prev) => [...prev, msg]);
+    setMessages((prev) => [...prev, { fromMe: true, text: input }]);
     setInput('');
-  }
+  };
+
+  if (!ad) return null;
 
   return (
     <div className="chat-backdrop" onClick={onClose}>
       <div className="chat-window" onClick={(e) => e.stopPropagation()}>
-        <button className="chat-close" onClick={onClose}>×</button>
+        <button className="chat-close" onClick={onClose}>
+          ×
+        </button>
 
-        <h3 className="chat-title">Chat s remeselníkom</h3>
-        <p className="chat-subtitle">{ad.title}</p>
+        <h2 className="chat-title">
+          Chat s {ad.firstName} {ad.lastName}
+        </h2>
+        <p className="chat-subtitle">
+          {online ? '🟢 Online' : '🔴 Offline'} • História 30 dní
+        </p>
 
         <div className="chat-messages">
-          {messages.map((m) => (
-            <div
-              key={m.id}
-              className={m.sender === 'customer' ? 'msg msg-me' : 'msg msg-them'}
-            >
+          {messages.map((m, i) => (
+            <div key={i} className={`msg ${m.fromMe ? 'msg-me' : 'msg-them'}`}>
               {m.text}
             </div>
           ))}
-          <div ref={messagesEndRef} />
         </div>
 
         <div className="chat-input-row">
           <input
             className="chat-input"
-            placeholder="Napíšte správu..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Napíšte správu..."
           />
-          <button className="chat-send" onClick={handleSend}>Poslať</button>
+          <button className="chat-send" onClick={sendMessage}>
+            ➤
+          </button>
         </div>
       </div>
     </div>
