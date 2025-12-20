@@ -1,27 +1,49 @@
 'use client';
 
-import { Listing } from '@/lib/types';
+import { useState } from 'react';
 
-export default function AdModal({
-  ad,
-  onClose,
-}: {
-  ad: Listing | null;
-  onClose: () => void;
-}) {
-  if (!ad) return null;
+export default function DemandModal({ onClose }: { onClose: () => void }) {
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: '',
+    content: '',
+    location: '',
+    price: '',
+  });
 
-  const maskedEmail = ad.showEmail
-    ? ad.email
-    : ad.email
-    ? ad.email.slice(0, 4) + '*******'
-    : 'nezobrazené';
+  const [error, setError] = useState('');
 
-  const maskedPhone = ad.showPhone
-    ? ad.phone
-    : ad.phone
-    ? ad.phone.slice(0, 4) + '*******'
-    : 'nezobrazené';
+  const submit = async () => {
+    // VALIDÁCIA
+    if (!form.firstName.trim()) {
+      setError('Meno je povinné.');
+      return;
+    }
+    if (!form.phone.trim()) {
+      setError('Telefón je povinný.');
+      return;
+    }
+    if (!form.content.trim()) {
+      setError('Obsah dopytu je povinný.');
+      return;
+    }
+    if (!form.location.trim()) {
+      setError('Lokalita je povinná.');
+      return;
+    }
+
+    setError('');
+
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/dopyty`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    });
+
+    onClose();
+  };
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -30,68 +52,105 @@ export default function AdModal({
           ×
         </button>
 
-        <h2 className="modal-title">
-          {ad.firstName} {ad.lastName}
-        </h2>
+        <h2 className="modal-title">Zadať dopyt</h2>
 
-        {/* Fotky */}
-        {ad.photos && (
-          <div className="modal-photos">
-            {ad.photos.map((p, i) => (
-              <div
-                key={i}
-                className="modal-photo"
-                style={{ backgroundImage: `url(${p})` }}
-              />
-            ))}
+        {/* ERROR MESSAGE */}
+        {error && (
+          <div
+            style={{
+              background: '#ffe5e5',
+              color: '#b30000',
+              padding: '10px 12px',
+              borderRadius: 12,
+              marginBottom: 12,
+              fontSize: 14,
+            }}
+          >
+            {error}
           </div>
         )}
 
-        {/* Sekcie */}
+        {/* MENO */}
         <div className="modal-section">
-          <h3>Predstavenie</h3>
-          <p>{ad.description}</p>
+          <input
+            placeholder="Meno *"
+            className="round"
+            style={{ width: '100%', padding: 8 }}
+            value={form.firstName}
+            onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+          />
         </div>
 
+        {/* PRIEZVISKO */}
         <div className="modal-section">
-          <h3>Zručnosti</h3>
-          <ul className="modal-list">
-            {ad.skills?.map((s, i) => (
-              <li key={i}>{s}</li>
-            ))}
-          </ul>
+          <input
+            placeholder="Priezvisko"
+            className="round"
+            style={{ width: '100%', padding: 8 }}
+            value={form.lastName}
+            onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+          />
         </div>
 
+        {/* TELEFÓN */}
         <div className="modal-section">
-          <h3>Lokalita</h3>
-          <p>{ad.location}</p>
+          <input
+            placeholder="Telefón *"
+            className="round"
+            style={{ width: '100%', padding: 8 }}
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          />
         </div>
 
-        {ad.priceList && (
-          <div className="modal-section">
-            <h3>Cenník</h3>
-            <ul className="modal-list">
-              {ad.priceList.map((p, i) => (
-                <li key={i}>
-                  {p.service}: {p.price}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
+        {/* EMAIL */}
         <div className="modal-section">
-          <h3>Kontakt</h3>
-          <p>Email: {maskedEmail}</p>
-          <p>Telefón: {maskedPhone}</p>
+          <input
+            placeholder="Email"
+            className="round"
+            style={{ width: '100%', padding: 8 }}
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
         </div>
 
-        {ad.extraInfo && (
-          <div className="modal-section">
-            <h3>Doplnkové informácie</h3>
-            <p>{ad.extraInfo}</p>
-          </div>
-        )}
+        {/* OBSAH DOPYTU */}
+        <div className="modal-section">
+          <textarea
+            placeholder="Obsah dopytu *"
+            className="round"
+            style={{ width: '100%', padding: 8, minHeight: 120 }}
+            value={form.content}
+            onChange={(e) => setForm({ ...form, content: e.target.value })}
+          />
+        </div>
+
+        {/* LOKALITA */}
+        <div className="modal-section">
+          <input
+            placeholder="Lokalita *"
+            className="round"
+            style={{ width: '100%', padding: 8 }}
+            value={form.location}
+            onChange={(e) => setForm({ ...form, location: e.target.value })}
+          />
+        </div>
+
+        {/* CENA */}
+        <div className="modal-section">
+          <input
+            placeholder="Ponúkaná cena"
+            className="round"
+            style={{ width: '100%', padding: 8 }}
+            value={form.price}
+            onChange={(e) => setForm({ ...form, price: e.target.value })}
+          />
+        </div>
+
+        {/* SUBMIT */}
+        <button className="button" onClick={submit}>
+          Odoslať dopyt
+        </button>
       </div>
     </div>
   );

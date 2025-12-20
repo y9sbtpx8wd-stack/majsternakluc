@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import AdsGrid from '@/components/AdsGrid';
 import AdModal from '@/components/AdModal';
 import ChatWidget from '@/components/ChatWidget';
+import Menu from '@/components/Menu';
+import { Listing } from '@/lib/types';
 
 export default function HomePage() {
-  const [ads, setAds] = useState([]);
-  const [selectedAd, setSelectedAd] = useState(null);
-  const [chatAd, setChatAd] = useState(null);
+  const [ads, setAds] = useState<Listing[]>([]);
+  const [selectedAd, setSelectedAd] = useState<Listing | null>(null);
+  const [chatAd, setChatAd] = useState<Listing | null>(null);
 
   // Fulltext
   const [search, setSearch] = useState('');
@@ -27,7 +29,7 @@ export default function HomePage() {
     if (minRating) params.append('minRating', minRating);
 
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/inzeraty?${params.toString()}`
+      `${process.env.NEXT_PUBLIC_API_URL}/listings?${params.toString()}`
     );
 
     const data = await res.json();
@@ -113,25 +115,7 @@ export default function HomePage() {
       {/* -------------------------------- */}
       <main style={{ flex: 1, padding: 20 }}>
         {/* MENU */}
-        <header className="header" style={{ marginBottom: 20 }}>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <a href="/" style={{ fontWeight: 600 }}>
-              majsternakluc.sk
-            </a>
-            <a href="/o-stranke">O stránke</a>
-            <a href="/info">Užitočné info</a>
-          </div>
-
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button className="button">+ Pridať inzerát</button>
-            <button className="button" style={{ background: '#666' }}>
-              Prihlásiť sa
-            </button>
-            <button className="button" style={{ background: '#999' }}>
-              Registrovať
-            </button>
-          </div>
-        </header>
+        <Menu />
 
         {/* FULLTEXT */}
         <div style={{ marginBottom: 20 }}>
@@ -174,3 +158,4 @@ export default function HomePage() {
     </div>
   );
 }
+

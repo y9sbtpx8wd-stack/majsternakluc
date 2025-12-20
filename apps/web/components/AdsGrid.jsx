@@ -38,7 +38,7 @@ export default function AdsGrid({
 
           {/* Intro */}
           <p style={{ marginTop: 12 }}>
-            {ad.intro?.slice(0, 120) ?? ad.description.slice(0, 120)}...
+            {(ad.intro ?? ad.description)?.slice(0, 120)}...
           </p>
 
           {/* Fotky */}
@@ -79,4 +79,5 @@ export default function AdsGrid({
     </div>
   );
 }
+
 
