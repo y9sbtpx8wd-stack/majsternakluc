@@ -31,8 +31,11 @@ model User {
 
   profile       Profile?
   subscription  Subscription?
-  ads           Ad[]
+  listings      Listing[]
+  reviews       Review[]
+  demands       Demand[]
 }
+
 
 model Profile {
   id              String    @id @default(uuid())
@@ -57,23 +60,6 @@ model Subscription {
   endDate    DateTime
 }
 
-model Ad {
-  id          String     @id @default(uuid())
-  userId      String
-  user        User       @relation(fields: [userId], references: [id])
-  title       String
-  summary     String
-  description String
-  category    Category
-  location    String
-  price       Int?
-  isPublished Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  metrics     AdMetrics?
-  reviews     Review[]
-}
 
 model AdMetrics {
   id          String @id @default(uuid())
@@ -88,23 +74,52 @@ model Review {
   id        String   @id @default(uuid())
   rating    Int
   comment   String?
-  adId      String
-  ad        Ad       @relation(fields: [adId], references: [id])
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }
+
 
 model Demand {
-  id        String   @id @default(uuid())
-  title     String
-  createdAt DateTime @default(now())
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+
+  title       String
+  description String?
+  category    Category?
+  location    String?
+  isPublished Boolean    @default(true)
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
+
 model Listing {
-  id        String   @id @default(uuid())
-  title     String
-  description String?
-  createdAt DateTime @default(now())
+  id           String     @id @default(uuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+
+  title        String
+  summary      String?
+  description  String?
+  category     Category?
+  location     String?
+  price        Int?
+  pricePerHour String?
+  photos       String[]   @default([])
+
+  isPublished  Boolean    @default(true)
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  reviews      Review[]
 }
+
 model Chat {
   id           String    @id @default(cuid())
   listingId    String

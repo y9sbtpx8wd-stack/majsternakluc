@@ -1,17 +1,61 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
-import { Demand } from '@prisma/client';
+import { CreateDemandDto } from './dto/create-demand.dto';
+import { UpdateDemandDto } from './dto/update-demand.dto';
 
 @Injectable()
 export class DemandsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<Demand[]> {
-    return this.prisma.demand.findMany();
+  findAll() {
+    return this.prisma.demand.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
-  async findOne(id: string): Promise<Demand | null> {
-    return this.prisma.demand.findUnique({ where: { id } });
+  findOne(id: string) {
+    return this.prisma.demand.findUnique({
+      where: { id },
+    });
+  }
+
+  findByUser(userId: string) {
+    return this.prisma.demand.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  create(dto: CreateDemandDto, userId: string) {
+    return this.prisma.demand.create({
+      data: {
+        title: dto.title,
+        description: dto.description,
+        category: dto.category ?? null,
+        location: dto.location ?? null,
+        userId,
+      },
+    });
+  }
+
+  update(id: string, dto: UpdateDemandDto, userId: string) {
+    return this.prisma.demand.update({
+      where: { id },
+      data: {
+        ...(dto.title !== undefined ? { title: dto.title } : {}),
+        ...(dto.description !== undefined ? { description: dto.description } : {}),
+        ...(dto.category !== undefined ? { category: dto.category } : {}),
+        ...(dto.location !== undefined ? { location: dto.location } : {}),
+        ...(dto.isPublished !== undefined ? { isPublished: dto.isPublished } : {}),
+        userId,
+      },
+    });
+  }
+
+  delete(id: string, userId: string) {
+    return this.prisma.demand.delete({
+      where: { id },
+    });
   }
 }
 
