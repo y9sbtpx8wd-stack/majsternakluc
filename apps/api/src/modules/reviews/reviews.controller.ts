@@ -8,18 +8,18 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 export class ReviewsController {
   constructor(private service: ReviewsService) {}
 
-  @Get(':listingId')
-  getReviews(@Param('listingId') listingId: string) {
-    return this.service.findForListing(listingId);
+  @Get(':userId')
+  getReviews(@Param('userId') userId: string) {
+    return this.service.findForUser(userId);
   }
 
-  @Post(':listingId')
+  @Post()
   @UseGuards(AuthGuard)
   create(
-    @Param('listingId') listingId: string,
     @Body() dto: CreateReviewDto,
     @CurrentUser() user: any,
   ) {
-    return this.service.create(listingId, dto, user.sub);
+    return this.service.create(dto, user.sub);
   }
 }
+

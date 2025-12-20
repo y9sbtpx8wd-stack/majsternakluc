@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="{{lang}}">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{subject}}</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 40px;
+      margin: 0;
+      color: #333;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #1a1a1a;
+        color: #e5e5e5;
+      }
+      .container {
+        background: #2a2a2a !important;
+      }
+      a.btn {
+        background: #4a90e2 !important;
+      }
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+    }
+
+    .logo {
+      width: 160px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+
+    a.btn {
+      display: inline-block;
+      padding: 12px 20px;
+      background: #007bff;
+      color: white !important;
+      text-decoration: none;
+      border-radius: 6px;
+      margin-top: 20px;
+    }
+
+    p {
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .footer {
+      margin-top: 40px;
+      font-size: 13px;
+      color: #777;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <img src="https://tvoja-domena/logo.png" alt="Logo" class="logo" />
+
+    <h1>
+      {{#if sk}}Overenie emailu{{/if}}
+      {{#if cz}}Ověření emailu{{/if}}
+      {{#if en}}Verify your email{{/if}}
+    </h1>
+
+    <p>
+      {{#if sk}}Ahoj {{name}}, klikni na tlačidlo nižšie a over svoj email.{{/if}}
+      {{#if cz}}Ahoj {{name}}, klikni na tlačítko níže a ověř svůj email.{{/if}}
+      {{#if en}}Hi {{name}}, click the button below to verify your email.{{/if}}
+    </p>
+
+    <a href="{{url}}" class="btn">
+      {{#if sk}}Overiť email{{/if}}
+      {{#if cz}}Ověřit email{{/if}}
+      {{#if en}}Verify Email{{/if}}
+    </a>
+
+    <p class="footer">
+      © 2025 MajsterNaKľúč<br />
+      <a href="https://tvoja-domena.sk">tvoja-domena.sk</a><br />
+      Kontakt: support@tvoja-domena.sk
+    </p>
+  </div>
+</body>
+</html>

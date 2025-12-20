@@ -26,6 +26,10 @@ model User {
   firstName     String
   lastName      String?
   phone         String
+
+  emailVerified Boolean  @default(false)   // 🔥 DOPLNENÉ
+  refreshToken  String?                    // 🔥 DOPLNENÉ
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -35,6 +39,7 @@ model User {
   reviews       Review[]
   demands       Demand[]
 }
+
 
 
 model Profile {
@@ -74,12 +79,16 @@ model Review {
   id        String   @id @default(uuid())
   rating    Int
   comment   String?
-  listingId String
-  listing   Listing  @relation(fields: [listingId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+
+  reviewerId String
+  reviewer   User     @relation(fields: [reviewerId], references: [id])
+
+  targetUserId String
+  targetUser   User     @relation("UserReviews", fields: [targetUserId], references: [id])
+
   createdAt DateTime @default(now())
 }
+
 
 
 model Demand {
@@ -142,5 +151,21 @@ model Message {
   sender    String   // 'customer' | 'craftsman' napr.
   text      String
 
+  createdAt DateTime @default(now())
+}
+model EmailLog {
+  id        String   @id @default(uuid())
+  to        String
+  subject   String
+  template  String
+  createdAt DateTime @default(now())
+}
+model Invoice {
+  id        String   @id @default(uuid())
+  number    String
+  amount    Float
+  date      DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
 }

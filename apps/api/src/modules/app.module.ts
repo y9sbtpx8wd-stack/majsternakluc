@@ -8,6 +8,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from '../prisma.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { FilterModule } from './filter/filter.module';
+import { AdminModule } from '../modules/admin/admin.module';
+import { InvoiceModule } from '../modules/invoice/invoice.module';
+import { StripeModule } from '../modules/stripe/stripe.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { FilterModule } from './filter/filter.module';
     ReviewsModule,
     FilterModule,
     ChatModule,
+    AdminModule,
+    InvoiceModule,
+    StripeModule,
   ],
 })
 export class AppModule {}

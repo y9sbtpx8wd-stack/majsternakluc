@@ -1,11 +1,15 @@
 import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { MailService } from '../mail/mail.service'; // 🔥 DOPLNENÝ IMPORT
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService, // 🔥 DOPLNENÉ
+  ) {}
 
   // -------------------------
   // REGISTER
@@ -34,29 +38,29 @@ export class AuthService {
         phone: dto.phone,
         role: 'user',
 
-        // 🔥 DOPLNENÉ: emailVerified default
+        // 🔥 emailVerified default
         emailVerified: false,
 
-        // 🔥 DOPLNENÉ: refreshToken placeholder
+        // 🔥 refreshToken placeholder
         refreshToken: null,
       },
     });
 
-    // 🔥 DOPLNENÉ: email verification token
+    // 🔥 email verification token
     const emailToken = jwt.sign(
       { sub: user.id },
       process.env.JWT_EMAIL_SECRET!,
       { expiresIn: '1d' }
     );
 
-    // 🔥 DOPLNENÉ: miesto pre odoslanie emailu
-    // await this.mailService.sendVerificationEmail(user.email, emailToken);
+    // 🔥 odoslanie emailu
+    await this.mailService.sendVerificationEmail(user.email, emailToken);
 
     return {
       user,
       accessToken: this.signAccessToken(user.id),
       refreshToken: this.signRefreshToken(user.id),
-      emailToken, // voliteľné, môžeš odstrániť
+      emailToken,
     };
   }
 
@@ -73,14 +77,14 @@ export class AuthService {
     const ok = await bcrypt.compare(dto.password, user.passwordHash);
     if (!ok) throw new BadRequestException('Invalid credentials');
 
-    // 🔥 DOPLNENÉ: kontrola email verification
+    // 🔥 email verification check
     if (!user.emailVerified) {
       throw new BadRequestException('Email not verified');
     }
 
     const refreshToken = this.signRefreshToken(user.id);
 
-    // 🔥 DOPLNENÉ: uloženie refresh tokenu do DB
+    // 🔥 uloženie refresh tokenu
     await this.prisma.user.update({
       where: { id: user.id },
       data: { refreshToken },
@@ -101,7 +105,7 @@ export class AuthService {
       const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as any;
       const userId = payload.sub;
 
-      // 🔥 DOPLNENÉ: kontrola refresh tokenu v DB
+      // 🔥 kontrola refresh tokenu v DB
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
       if (!user || user.refreshToken !== refreshToken) {
         throw new ForbiddenException('Invalid refresh token');
@@ -109,7 +113,7 @@ export class AuthService {
 
       const newRefresh = this.signRefreshToken(userId);
 
-      // 🔥 DOPLNENÉ: uloženie nového refresh tokenu
+      // 🔥 uloženie nového refresh tokenu
       await this.prisma.user.update({
         where: { id: userId },
         data: { refreshToken: newRefresh },
@@ -151,8 +155,8 @@ export class AuthService {
       { expiresIn: '15m' },
     );
 
-    // 🔥 DOPLNENÉ: miesto pre odoslanie emailu
-    // await this.mailService.sendPasswordResetEmail(user.email, token);
+    // 🔥 odoslanie reset emailu
+    await this.mailService.sendPasswordResetEmail(user.email, token);
 
     return { success: true };
   }
@@ -181,3 +185,24 @@ export class AuthService {
     return jwt.sign({ sub: userId }, process.env.JWT_REFRESH_SECRET!, { expiresIn: '30d' });
   }
 }
+async resendVerification(email: string) {
+  const user = await this.prisma.user.findUnique({ where: { email } });
+
+  if (!user) return { success: true }; // nechceme prezrádzať, či email existuje
+
+  if (user.emailVerified) return { success: true };
+
+  const token = jwt.sign(
+    { sub: user.id },
+    process.env.JWT_EMAIL_SECRET!,
+    { expiresIn: '1d' }
+  );
+
+  await this.mailService.sendVerificationEmail(user.email, token);
+
+  return { success: true };
+}
+function resendVerification(email: any, string: any) {
+  throw new Error('Function not implemented.');
+}
+

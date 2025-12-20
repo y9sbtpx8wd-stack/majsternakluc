@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
@@ -7,18 +7,93 @@ import { UpdateListingDto } from './dto/update-listing.dto';
 export class ListingsService {
   constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.listing.findMany({
+  // ----------------------------------------
+  // HELPER: BUILD USER RATING DATA
+  // ----------------------------------------
+  private buildUserRatingData(user: any) {
+    const reviews = user.reviews ?? [];
+    const reviewCount = reviews.length;
+
+    const avgRating =
+      reviewCount > 0
+        ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
+        : null;
+
+    // rating summary
+    const summary = {
+      '5': 0,
+      '4': 0,
+      '3': 0,
+      '2': 0,
+      '1': 0,
+    };
+
+    reviews.forEach((r) => {
+      summary[r.rating]++;
+    });
+
+    const summaryPercent = Object.fromEntries(
+      Object.entries(summary).map(([star, count]) => [
+        star,
+        reviewCount > 0 ? Math.round((count / reviewCount) * 100) : 0,
+      ]),
+    );
+
+    return {
+      ...user,
+      avgRating,
+      reviewCount,
+      ratingSummary: summaryPercent,
+    };
+  }
+
+  // ----------------------------------------
+  // GET ALL LISTINGS + USER RATING
+  // ----------------------------------------
+  async findAll() {
+    const listings = await this.prisma.listing.findMany({
       orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          include: {
+            reviews: true,
+          },
+        },
+      },
     });
+
+    return listings.map((listing) => ({
+      ...listing,
+      user: this.buildUserRatingData(listing.user),
+    }));
   }
 
-  findOne(id: string) {
-    return this.prisma.listing.findUnique({
+  // ----------------------------------------
+  // GET ONE LISTING + USER RATING
+  // ----------------------------------------
+  async findOne(id: string) {
+    const listing = await this.prisma.listing.findUnique({
       where: { id },
+      include: {
+        user: {
+          include: {
+            reviews: true,
+          },
+        },
+      },
     });
+
+    if (!listing) throw new NotFoundException('Listing not found');
+
+    return {
+      ...listing,
+      user: this.buildUserRatingData(listing.user),
+    };
   }
 
+  // ----------------------------------------
+  // GET LISTINGS BY USER
+  // ----------------------------------------
   findByUser(userId: string) {
     return this.prisma.listing.findMany({
       where: { userId },
@@ -26,6 +101,9 @@ export class ListingsService {
     });
   }
 
+  // ----------------------------------------
+  // CREATE LISTING
+  // ----------------------------------------
   create(dto: CreateListingDto, userId: string) {
     return this.prisma.listing.create({
       data: {
@@ -38,6 +116,9 @@ export class ListingsService {
     });
   }
 
+  // ----------------------------------------
+  // UPDATE LISTING
+  // ----------------------------------------
   update(id: string, dto: UpdateListingDto, userId: string) {
     return this.prisma.listing.update({
       where: { id },
@@ -51,13 +132,4 @@ export class ListingsService {
       },
     });
   }
-
-  delete(id: string, userId: string) {
-    // prípadne môžeš neskôr doplniť check, či listing patrí userovi
-    return this.prisma.listing.delete({
-      where: { id },
-    });
-  }
 }
-
-
