@@ -80,14 +80,18 @@ model Review {
   rating    Int
   comment   String?
 
-  reviewerId String
-  reviewer   User     @relation(fields: [reviewerId], references: [id])
+  reviewerId   String
+  reviewer     User     @relation(fields: [reviewerId], references: [id])
 
-  targetUserId String
-  targetUser   User     @relation("UserReviews", fields: [targetUserId], references: [id])
+  targetUserId String?
+  targetUser   User?    @relation("UserReviews", fields: [targetUserId], references: [id])
+
+  listingId    String?   // 🔥 DOPLNENÉ
+  listing      Listing?  @relation(fields: [listingId], references: [id]) // 🔥 DOPLNENÉ
 
   createdAt DateTime @default(now())
 }
+
 
 
 
@@ -126,8 +130,11 @@ model Listing {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  reviews      Review[]
+  reviews      Review[]        // už máš
+  stats        ListingStats?   // 🔥 DOPLNENÉ
+  history      ListingHistory[] // 🔥 DOPLNENÉ
 }
+
 
 model Chat {
   id           String    @id @default(cuid())
@@ -168,4 +175,60 @@ model Invoice {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+}
+model Monitoring {
+  id        Int      @id @default(autoincrement())
+  cpu       Int
+  ram       Int
+  latency   Int
+  createdAt DateTime @default(now())
+}
+model ApiRequest {
+  id        Int      @id @default(autoincrement())
+  method    String
+  path      String
+  status    Int
+  duration  Int
+  time      DateTime @default(now())
+}
+model ErrorLog {
+  id        Int      @id @default(autoincrement())
+  message   String
+  stack     String?
+  time      DateTime @default(now())
+}
+model SystemEvent {
+  id        Int      @id @default(autoincrement())
+  event     String
+  time      DateTime @default(now())
+}
+model ListingStats {
+  listingId String   @id
+  views     Int      @default(0)
+  contacts  Int      @default(0)
+  rating    Float    @default(0)
+
+  listing   Listing  @relation(fields: [listingId], references: [id])
+}
+model ListingHistory {
+  id        Int      @id @default(autoincrement())
+  listingId String
+  action    String
+  userEmail String?
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+
+  listing   Listing  @relation(fields: [listingId], references: [id])
+}
+model Report {
+  id         String   @id @default(uuid())
+  type       String   // listing | demand | review | user
+  reason     String
+  targetId   String
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+
+  reporterId String?
+  reporter   User?    @relation(fields: [reporterId], references: [id])
 }

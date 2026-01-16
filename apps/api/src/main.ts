@@ -4,33 +4,45 @@ import { AppModule } from './modules/app.module';
 import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-
-const config = new DocumentBuilder()
-  .setTitle('MajsterNaKľúč API')
-  .setDescription('API dokumentácia pre backend')
-  .setVersion('1.0')
-  .addBearerAuth()
-  .build();
-
-const document = SwaggerModule.createDocument(app, config);
-SwaggerModule.setup('docs', app, document);
+import { AdminGateway } from './modules/admin/admin.gateway';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
-  // Global prefix
+  // ---------------------------------------------------------
+  // 🔥 Swagger konfigurácia
+  // ---------------------------------------------------------
+  const config = new DocumentBuilder()
+    .setTitle('MajsterNaKľúč API')
+    .setDescription('API dokumentácia pre backend')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, document);
+
+  // ---------------------------------------------------------
+  // 🔥 Global prefix
+  // ---------------------------------------------------------
   app.setGlobalPrefix('api');
 
-  // Cookie parser
+  // ---------------------------------------------------------
+  // 🔥 Cookie parser
+  // ---------------------------------------------------------
   app.use(cookieParser());
 
-  // CORS
+  // ---------------------------------------------------------
+  // 🔥 CORS
+  // ---------------------------------------------------------
   app.enableCors({
     origin: '*',
     credentials: true,
   });
 
-  // Global validation
+  // ---------------------------------------------------------
+  // 🔥 Global validation
+  // ---------------------------------------------------------
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -39,7 +51,34 @@ async function bootstrap() {
     }),
   );
 
+  // ---------------------------------------------------------
+  // 🔥 Hybridný request logger (volá AdminGateway)
+  // ---------------------------------------------------------
+  const gateway = app.get(AdminGateway);
+
+  app.use((req, res, next) => {
+    const start = Date.now();
+
+    res.on('finish', () => {
+      const duration = Date.now() - start;
+
+      gateway.emitApiRequestLog({
+        method: req.method,
+        path: req.originalUrl,
+        status: res.statusCode,
+        duration,
+        time: new Date(),
+      });
+    });
+
+    next();
+  });
+
+  // ---------------------------------------------------------
+  // 🔥 Spustenie servera
+  // ---------------------------------------------------------
   await app.listen(process.env.PORT || 4000, '0.0.0.0');
 }
 
 bootstrap();
+
