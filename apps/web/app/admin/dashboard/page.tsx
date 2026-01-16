@@ -8,6 +8,13 @@ import { RealtimeApiLogs } from '@/components/admin/RealtimeApiLogs';
 import { RealtimeErrorLogs } from '@/components/admin/RealtimeErrorLogs';
 import { RealtimeChatMonitor } from '@/components/admin/RealtimeChatMonitor';
 
+import { useAdminGuard } from '@/lib/useAdminGuard';
+
+import { useToast } from '@/lib/useToast';
+import { ToastContainer } from '@/components/ui/ToastContainer';
+import { useRole } from '@/lib/useRole';
+import { AlertBanner } from '@/components/ui/AlertBanner';
+
 // 🔥 MiniGraph komponent
 function MiniGraph({ values, color }: { values: number[]; color: string }) {
   return (
@@ -28,11 +35,46 @@ function MiniGraph({ values, color }: { values: number[]; color: string }) {
   );
 }
 
+// 🔥 Threshold farby pre monitoring
+function metricColor(value: number, warn: number, danger: number) {
+  if (value >= danger) return '#E53935';
+  if (value >= warn) return '#FB8C00';
+  return '#4CAF50';
+}
+
+// 🔥 CSV export
+function exportToCsv(filename: string, rows: any[]) {
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const csvContent = [
+    headers.join(';'),
+    ...rows.map((r) => headers.map((h) => JSON.stringify(r[h] ?? '')).join(';')),
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 export default function AdminDashboardPage() {
+  const { loading, user } = useAdminGuard();
+  if (loading) return <p>Načítavam...</p>;
+
   const [stats, setStats] = useState<any>(null);
   const [daily, setDaily] = useState<any[]>([]);
   const [topUsers, setTopUsers] = useState<any[]>([]);
   const [topServices, setTopServices] = useState<any[]>([]);
+
+  const { isSuperAdmin, isAdmin } = useRole();
+  const { toasts, show } = useToast();
+
+  // 🔥 alerts pre ADMINA
+  const [alerts, setAlerts] = useState<string[]>([]);
 
   // 🔥 nové sekcie
   const [aiTips, setAiTips] = useState<string[]>([]);
@@ -43,6 +85,16 @@ export default function AdminDashboardPage() {
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+
+  // 🔥 global search
+  const [globalSearch, setGlobalSearch] = useState('');
+
+  // 🔥 dark/light mode
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   // 🔥 Realtime monitoring state
   const [rtHistory, setRtHistory] = useState({
@@ -86,12 +138,11 @@ export default function AdminDashboardPage() {
   );
 
   // ---------------------------------------------------------
-  // 🔥 REALTIME SOCKET LISTENERY
+  // 🔥 REALTIME SOCKET LISTENERY + TOASTY + ALERTY
   // ---------------------------------------------------------
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_API_URL);
 
-    // 🔥 1) Realtime monitoring (CPU, RAM, latency)
     socket.on('monitoring-update', (data) => {
       setRtHistory((prev) => ({
         cpu: [...prev.cpu.slice(-19), data.cpu],
@@ -102,9 +153,24 @@ export default function AdminDashboardPage() {
         activeUsers: [...prev.activeUsers.slice(-19), data.activeUsers],
         activeChats: [...prev.activeChats.slice(-19), data.activeChats],
       }));
+
+      // 🔥 SUPERADMIN – toasty
+      if (isSuperAdmin) {
+        if (data.cpu > 90) show(`CPU ALERT: ${data.cpu}%`, 'warning');
+        if (data.ram > 90) show(`RAM ALERT: ${data.ram}%`, 'warning');
+        if (data.errorsPerMinute > 20) show(`Errors/min: ${data.errorsPerMinute}`, 'error');
+      }
+
+      // 🔥 ADMIN (nie superadmin) – bannery
+      if (isAdmin && !isSuperAdmin) {
+        const newAlerts: string[] = [];
+        if (data.cpu > 90) newAlerts.push(`CPU je na ${data.cpu}%`);
+        if (data.ram > 90) newAlerts.push(`RAM je na ${data.ram}%`);
+        if (data.errorsPerMinute > 20) newAlerts.push(`Errors/min: ${data.errorsPerMinute}`);
+        setAlerts(newAlerts);
+      }
     });
 
-    // 🔥 2) Realtime METRICS
     socket.on('metrics-update', (data) => {
       setRtHistory((prev) => ({
         ...prev,
@@ -115,32 +181,62 @@ export default function AdminDashboardPage() {
       }));
     });
 
-    // 🔥 3) Realtime API request log
     socket.on('api-request-log', (log) => {
       setApiLogs((prev) => [log, ...prev.slice(0, 49)]);
+
+      // 🔥 SUPERADMIN – toast pri 5xx
+      if (isSuperAdmin && log.status >= 500) {
+        show(`API ERROR ${log.status}: ${log.method} ${log.path}`, 'error');
+      }
     });
 
-    // 🔥 4) Realtime error log
     socket.on('error-log', (err) => {
       setErrorLogs((prev) => [err, ...prev.slice(0, 49)]);
+
+      // 🔥 SUPERADMIN – toast pri chybe
+      if (isSuperAdmin) {
+        show(`Chyba: ${err.message}`, 'error');
+      }
     });
 
-    // 🔥 5) Realtime chat správy
     socket.on('chat-message', (msg) => {
       setChatMessages((prev) => [msg, ...prev.slice(0, 49)]);
     });
 
-    // 🔥 6) Realtime audit log
     socket.on('audit-log', (entry) => {
       setAuditLogs((prev) => [entry, ...prev.slice(0, 49)]);
     });
 
     return () => socket.disconnect();
-  }, []);
+  }, [isAdmin, isSuperAdmin, show]);
 
   return (
     <div style={{ padding: 20 }}>
+      {/* 🔥 TOASTY PRE SUPERADMINA */}
+      <ToastContainer toasts={toasts} />
+
+      {/* 🔥 ALERT BANNER PRE ADMINA */}
+      <AlertBanner alerts={alerts} />
+
       <h1>Admin Dashboard</h1>
+
+      {/* 🔥 GLOBAL SEARCH + EXPORT + THEME */}
+      <div style={{ display: 'flex', gap: 10, margin: '10px 0 20px' }}>
+        <input
+          placeholder="Globálne hľadanie v logoch…"
+          value={globalSearch}
+          onChange={(e) => setGlobalSearch(e.target.value)}
+          style={{ flex: 1 }}
+        />
+
+        <button onClick={() => exportToCsv('api-logs.csv', apiLogs)}>Export API</button>
+        <button onClick={() => exportToCsv('error-logs.csv', errorLogs)}>Export chyby</button>
+        <button onClick={() => exportToCsv('audit-logs.csv', auditLogs)}>Export audit</button>
+
+        <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+          {theme === 'light' ? 'Dark mode' : 'Light mode'}
+        </button>
+      </div>
 
       {/* 🔥 REALTIME AUDIT LOG */}
       <RealtimeAuditLog logs={auditLogs} />
@@ -199,7 +295,9 @@ export default function AdminDashboardPage() {
           <tbody>
             {topUsers.map((u) => (
               <tr key={u.id}>
-                <td>{u.firstName} {u.lastName}</td>
+                <td>
+                  {u.firstName} {u.lastName}
+                </td>
                 <td>{u.demands}</td>
                 <td>{u.listings}</td>
               </tr>
@@ -246,20 +344,29 @@ export default function AdminDashboardPage() {
         <div className="grid" style={{ marginBottom: 20 }}>
           <div className="card round" style={{ padding: 20 }}>
             <h3>CPU</h3>
-            <p>{monitoring.cpu}%</p>
-            {bar(monitoring.cpu, '#4CAF50')}
+            <p style={{ color: metricColor(monitoring.cpu, 70, 90), fontWeight: 600 }}>
+              {monitoring.cpu}%
+            </p>
+            {bar(monitoring.cpu, metricColor(monitoring.cpu, 70, 90))}
           </div>
 
           <div className="card round" style={{ padding: 20 }}>
             <h3>RAM</h3>
-            <p>{monitoring.ram}%</p>
-            {bar(monitoring.ram, '#2196F3')}
+            <p style={{ color: metricColor(monitoring.ram, 70, 90), fontWeight: 600 }}>
+              {monitoring.ram}%
+            </p>
+            {bar(monitoring.ram, metricColor(monitoring.ram, 70, 90))}
           </div>
 
           <div className="card round" style={{ padding: 20 }}>
             <h3>API Latency</h3>
-            <p>{monitoring.latency} ms</p>
-            {bar(Math.min(monitoring.latency / 10, 100), '#FF9800')}
+            <p style={{ color: metricColor(monitoring.latency, 150, 300), fontWeight: 600 }}>
+              {monitoring.latency} ms
+            </p>
+            {bar(
+              Math.min(monitoring.latency / 10, 100),
+              metricColor(monitoring.latency, 150, 300),
+            )}
           </div>
         </div>
       )}
@@ -268,20 +375,53 @@ export default function AdminDashboardPage() {
       <div className="grid" style={{ marginBottom: 20 }}>
         <div className="card round" style={{ padding: 20 }}>
           <h3>CPU (realtime)</h3>
-          <MiniGraph values={rtHistory.cpu} color="#4CAF50" />
-          <p style={{ marginTop: 8 }}>{rtHistory.cpu.at(-1) ?? '...'}%</p>
+          <MiniGraph
+            values={rtHistory.cpu}
+            color={metricColor(rtHistory.cpu.at(-1) ?? 0, 70, 90)}
+          />
+          <p
+            style={{
+              marginTop: 8,
+              color: metricColor(rtHistory.cpu.at(-1) ?? 0, 70, 90),
+              fontWeight: 600,
+            }}
+          >
+            {rtHistory.cpu.at(-1) ?? '...'}%
+          </p>
         </div>
 
         <div className="card round" style={{ padding: 20 }}>
           <h3>RAM (realtime)</h3>
-          <MiniGraph values={rtHistory.ram} color="#2196F3" />
-          <p style={{ marginTop: 8 }}>{rtHistory.ram.at(-1) ?? '...'}%</p>
+          <MiniGraph
+            values={rtHistory.ram}
+            color={metricColor(rtHistory.ram.at(-1) ?? 0, 70, 90)}
+          />
+          <p
+            style={{
+              marginTop: 8,
+              color: metricColor(rtHistory.ram.at(-1) ?? 0, 70, 90),
+              fontWeight: 600,
+            }}
+          >
+            {rtHistory.ram.at(-1) ?? '...'}%
+          </p>
         </div>
 
         <div className="card round" style={{ padding: 20 }}>
           <h3>API Latency (realtime)</h3>
-          <MiniGraph values={rtHistory.latency} color="#FF9800" />
-          <p style={{ marginTop: 8 }}>{rtHistory.latency.at(-1) ?? '...'} ms</p>
+          <MiniGraph
+            values={rtHistory.latency}
+            color={metricColor(rtHistory.latency.at(-1) ?? 0, 150, 300)}
+          />
+          <p
+            style={{
+              marginTop: 8,
+              color: metricColor(rtHistory.latency.at(-1) ?? 0, 150, 300),
+              fontWeight: 600,
+            }}
+          >
+            {rtHistory.latency.at(-1) ?? '...'} ms
+          </p>
         </div>
 
         <div className="card round" style={{ padding: 20 }}>
@@ -317,7 +457,7 @@ export default function AdminDashboardPage() {
 
       {/* 🔥 REALTIME CHAT MONITOR */}
       <RealtimeChatMonitor messages={chatMessages} />
-
     </div>
   );
 }
+

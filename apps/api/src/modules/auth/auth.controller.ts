@@ -3,11 +3,18 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ApiTags, ApiBody, ApiOperation } from '@nestjs/swagger';
+import { Controller, Post, Res } from '@nestjs/common'; 
+import { Response } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private auth: AuthService) {}
+
+  @Post('logout') 
+logout(@Res() res: Response) 
+{ res.clearCookie('token'); 
+  return res.json({ success: true }); }
 
   @Post('register')
   @ApiOperation({ summary: 'Register new user' })

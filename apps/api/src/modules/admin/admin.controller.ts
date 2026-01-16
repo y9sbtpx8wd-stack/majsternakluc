@@ -14,15 +14,21 @@ import { AdminGuard } from './admin.guard';
 import { AuditService } from './audit.service';
 import { UseInterceptors } from '@nestjs/common'; 
 import { AuditInterceptor } from './audit.interceptor';
+import { AdminService } from './admin.service';
+import { Roles } from '../auth/roles.decorator'; 
+import { Role } from '../auth/roles.enum'; 
+import { RolesGuard } from '../auth/roles.guard';
 
 
-@UseGuards(AdminGuard) 
+@UseGuards(AdminGuard, RolesGuard) 
+@Roles(Role.ADMIN, Role.SUPERADMIN)
 @UseInterceptors(AuditInterceptor) 
 @Controller('admin')
 export class AdminController {
   constructor
   (private readonly prisma: PrismaService, 
-   private readonly audit: AuditService,)
+   private readonly audit: AuditService,
+   private adminService: AdminService,)
   {}
 
   // ---------------------------------------------------------

@@ -1,37 +1,36 @@
-type AuditLogEntry = {
-  id?: string;
-  action: string;
-  details?: any;
-  createdAt?: string;
-  userId?: string;
+ const actionColor = {
+  DELETE_LISTING: "#E53935",
+  UPDATE_USER: "#2196F3",
+  CREATE_INVOICE: "#4CAF50",
+  ADMIN_API_CALL: "#673AB7",
 };
 
-export function RealtimeAuditLog({ logs }: { logs: AuditLogEntry[] }) {
+export function RealtimeAuditLog({ logs }) {
   return (
     <div className="card round" style={{ padding: 20, marginBottom: 20 }}>
       <h3>Realtime Audit Log</h3>
-      <div style={{ maxHeight: 260, overflowY: 'auto', marginTop: 10 }}>
-        {logs.length === 0 && (
-          <p style={{ opacity: 0.6 }}>Zatiaľ žiadne admin akcie.</p>
-        )}
 
+      <div style={{ maxHeight: 260, overflowY: "auto", marginTop: 10 }}>
         {logs.map((log, i) => (
-          <div
-            key={log.id ?? i}
-            style={{
-              padding: '6px 0',
-              borderBottom: '1px solid rgba(0,0,0,0.05)',
-              fontSize: 13,
-            }}
-          >
-            <div>
-              <strong>{log.action}</strong>
-            </div>
+          <div key={log.id ?? i} style={{ marginBottom: 10 }}>
+            <span
+              style={{
+                background: actionColor[log.action] ?? "#555",
+                color: "white",
+                padding: "2px 6px",
+                borderRadius: 4,
+                marginRight: 6,
+              }}
+            >
+              {log.action}
+            </span>
+
             {log.details && (
-              <div style={{ opacity: 0.7 }}>
+              <span style={{ opacity: 0.7 }}>
                 {JSON.stringify(log.details)}
-              </div>
+              </span>
             )}
+
             {log.createdAt && (
               <div style={{ fontSize: 11, opacity: 0.5 }}>
                 {new Date(log.createdAt).toLocaleString()}
@@ -43,4 +42,3 @@ export function RealtimeAuditLog({ logs }: { logs: AuditLogEntry[] }) {
     </div>
   );
 }
-

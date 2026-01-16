@@ -23,6 +23,8 @@ import { RequestLoggerMiddleware } from './middleware/request-logger.middleware'
 import { ErrorLoggerFilter } from './filters/error-logger.filter';
 import { ThrottlerModule } from '@nestjs/throttler';
 
+import { APP_GUARD } from '@nestjs/core'; 
+import { RolesGuard } from './modules/auth/roles.guard';
 
 @Module({
   imports: [
@@ -61,6 +63,9 @@ import { ThrottlerModule } from '@nestjs/throttler';
       provide: APP_FILTER,
       useClass: ErrorLoggerFilter,
     },
+    
+    { provide: APP_GUARD, 
+      useClass: RolesGuard, },
   ],
 })
 export class AppModule implements NestModule {
